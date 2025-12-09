@@ -1,4 +1,4 @@
-torch
+torch==2.9.1+cu128
 transformers
 pandas
 streamlit
