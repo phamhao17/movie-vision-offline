@@ -14,29 +14,23 @@ df = data["df"]
 st.title("Movie Vision App")
 st.write("Find movies related to your description!")
 
-# Input description
 query = st.text_input("Enter a description of the movie:")
 
 if query:
     st.write("Searching for movies related to:", query)
 
-    # Load CLIP model
     model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
     tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
 
-    # Get query embedding
     with torch.no_grad():
         inputs = tokenizer(query, return_tensors="pt")
         query_embedding = model.get_text_features(**inputs)
 
-    # Normalize embeddings
     query_embedding = F.normalize(query_embedding, dim=1)
     movie_embeddings = F.normalize(embeddings, dim=1)
 
-    # Cosine similarity
     similarities = (query_embedding @ movie_embeddings.T).squeeze(0)
 
-    # Top 5 movies
     topk = torch.topk(similarities, k=5)
     top_indices = topk.indices.tolist()
     top_scores = topk.values.tolist()
