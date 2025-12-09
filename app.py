@@ -1,42 +1,23 @@
 import streamlit as st
 import pickle
-import torch
-import torch.nn.functional as F
-from transformers import CLIPModel, CLIPTokenizer
+import numpy as np
 
 # Load embeddings
 with open("data/embeddings.pkl", "rb") as f:
     data = pickle.load(f)
 
-embeddings = data["embeddings"]
+embeddings = data["embeddings"]  # đây là torch tensor, nhưng chúng ta chỉ đọc, không cần torch
 df = data["df"]
 
 st.title("Movie Vision App")
-st.write("Find movies related to your description!")
 
-query = st.text_input("Enter a description of the movie:")
+# Nhập mô tả tìm phim
+query = st.text_input("Enter movie description:")
 
 if query:
-    st.write("Searching for movies related to:", query)
-
-    model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-    tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
-
-    with torch.no_grad():
-        inputs = tokenizer(query, return_tensors="pt")
-        query_embedding = model.get_text_features(**inputs)
-
-    query_embedding = F.normalize(query_embedding, dim=1)
-    movie_embeddings = F.normalize(embeddings, dim=1)
-
-    similarities = (query_embedding @ movie_embeddings.T).squeeze(0)
-
-    topk = torch.topk(similarities, k=5)
-    top_indices = topk.indices.tolist()
-    top_scores = topk.values.tolist()
-
-    st.write("Top 5 recommended movies:")
-    for idx, score in zip(top_indices, top_scores):
-        title = df.iloc[idx]["title"]
-        tags = df.iloc[idx]["tags"]
-        st.write(f"- **{title}** (Score: {score:.3f}) | Tags: {tags}")
+    st.write("Searching for movies matching:", query)
+    
+    # Ví dụ dummy search: lấy 5 phim đầu (có thể thay bằng tính cosine similarity offline)
+    top_movies = df.head(5)
+    for i, row in top_movies.iterrows():
+        st.write(f"{row['title']} - {row['tags']}")
