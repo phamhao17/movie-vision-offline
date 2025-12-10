@@ -91,9 +91,13 @@ if mode == "Upload Image to find movies":
         image_emb_norm = F.normalize(image_emb, dim=-1)
         movie_embs_norm = F.normalize(embeddings, dim=-1).to(device)
         similarities = (image_emb_norm @ movie_embs_norm.T).squeeze(0)
+        
+        # Ensures correct display of TOP 5
         top5_idx = similarities.topk(min(5, len(titles))).indices.cpu().numpy()
 
         st.write("### Top 5 similar movies:")
+        
+        # Loop to display ALL 5 movies
         for idx in top5_idx:
             st.write(f"### {titles[idx]}")
             st.write(f"**Tags:** {tags[idx]}")
@@ -101,6 +105,30 @@ if mode == "Upload Image to find movies":
             if poster_urls[idx]:
                 st.image(poster_urls[idx], width=200)
             
-            # Music suggestion
+            # Music suggestion (Cleaned to avoid NameError)
             movie_tags = tags[idx].lower().split("|")
-            suggested_
+            suggested_genres = set()
+            for t in movie_tags:
+                if t.strip() in music_map:
+                    suggested_genres.add(t.strip())
+            
+            if suggested_genres:
+                st.write("🎵 Suggested music:")
+                for g in suggested_genres:
+                    genre_name, music_url = music_map[g]
+                    st.write(f"- {genre_name}")
+                    try:
+                        audio_bytes = requests.get(music_url).content
+                        st.audio(audio_bytes, format="audio/mp3")
+                    except:
+                        st.write("Audio not available.")
+            st.write("---") # Separator after each movie
+
+elif mode == "Text Description to find images":
+    desc = st.text_area("Enter your image description:")
+    if st.button("Generate placeholder images"):
+        st.write("Note: This demo does not generate real images, just shows placeholders.")
+        # Fake placeholder images (since no real API)
+        for i in range(3):
+            placeholder_url = f"https://via.placeholder.com/200x200.png?text=Generated+Image+{i+1}"
+            st.image(placeholder_url, caption=f"Generated Image {i+1}")
