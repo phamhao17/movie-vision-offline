@@ -8,6 +8,11 @@ import requests
 from io import BytesIO
 
 # ----------------------
+# Cấu hình
+# ----------------------
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+# ----------------------
 # Load movies.json
 # ----------------------
 with open("data/movies.json", "r") as f:
@@ -31,7 +36,6 @@ embeddings = torch.tensor([m["embedding"] for m in movies_data])
 # ----------------------
 # CLIP Model
 # ----------------------
-device = "cuda" if torch.cuda.is_available() else "cpu"
 model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
 processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
