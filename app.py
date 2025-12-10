@@ -1,31 +1,4 @@
-# app.py
 import streamlit as st
-import pathlib # <- Line 1: Add the pathlib library import
-
-# (Other Streamlit configuration or setup commands...)
-
-# --- FILE ERROR FIX SECTION ---
-# Line 2: Get the absolute directory path where the current script (app.py) is located
-script_dir = pathlib.Path(__file__).parent 
-
-# Line 3: Construct the full, absolute path to the JSON file
-json_path = script_dir / "data" / "movies.json"
-# ------------------------------
-
-# Line 4 (The previous Line 18 in your Traceback): Use the new path variable
-try:
-    with open(json_path, "r") as f: # <- Use the 'json_path' variable instead of "data/movies.json"
-        # ... your code to load JSON ...
-        movies = json.load(f) # Assuming you are using the 'json' library
-    
-    st.success(f"Successfully loaded data from: {json_path}")
-    
-except Exception as e:
-    st.error(f"An error occurred while loading the JSON file: {e}")
-    # Handle the error or display a friendly message
-
-# (The rest of your Streamlit code)
-# ...import streamlit as st
 import json
 import torch
 import torch.nn.functional as F
@@ -33,18 +6,35 @@ from transformers import CLIPModel, CLIPProcessor
 from PIL import Image
 import requests
 from io import BytesIO
+import pathlib # Required for robust path handling
 
 # ----------------------
-# Cấu hình
+# Configuration
 # ----------------------
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # ----------------------
-# Load movies.json
+# ERROR FIX: Load movies.json (Using pathlib)
 # ----------------------
-with open("data/movies.json", "r") as f:
-    movies_data = json.load(f)
+try:
+    # 1. Define the absolute path based on the script's location
+    script_dir = pathlib.Path(__file__).parent 
+    json_path = script_dir / "data" / "movies.json" # Constructs the full path
 
+    # 2. Open the file using the absolute path
+    with open(json_path, "r") as f: 
+        movies_data = json.load(f)
+        
+    st.success(f"Successfully loaded movie data from: {json_path}")
+    
+except Exception as e:
+    # Display the error and stop the app if core data cannot be loaded
+    st.error(f"FILE NOT FOUND ERROR: Please ensure movies.json is inside the 'data' directory. Details: {e}")
+    st.stop() 
+
+# ----------------------
+# Data Preprocessing
+# ----------------------
 # Fix embeddings to exactly 512 dims
 for m in movies_data:
     emb = m["embedding"]
@@ -78,7 +68,7 @@ music_map = {
     "aliens": ("Ambient", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"),
     "blindfold": ("Chillout", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"),
     "class divide": ("Classical", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3")
-    # Thêm các thể loại khác nếu muốn
+    # Add other genres if desired
 }
 
 # ----------------------
@@ -111,12 +101,14 @@ if mode == "Upload Image to find movies":
             st.write(f"**Summary:** {summaries[idx]}")
             if poster_urls[idx]:
                 st.image(poster_urls[idx], width=200)
+            
             # Music suggestion
             movie_tags = tags[idx].lower().split("|")
             suggested_genres = set()
             for t in movie_tags:
                 if t.strip() in music_map:
                     suggested_genres.add(t.strip())
+            
             if suggested_genres:
                 st.write("🎵 Suggested music:")
                 for g in suggested_genres:
@@ -135,5 +127,5 @@ elif mode == "Text Description to find images":
         st.write("Note: This demo does not generate real images, just shows placeholders.")
         # Fake placeholder images (since no real API)
         for i in range(3):
-            placeholder_url = f"https://via.placeholder.com/200x200.png?text=Image+{i+1}"
+            placeholder_url = f"https://via.placeholder.com/200x200.png?text=Generated+Image+{i+1}"
             st.image(placeholder_url, caption=f"Generated Image {i+1}")
