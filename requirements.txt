@@ -1,11 +1,20 @@
---find-links https://download.pytorch.org/whl/cpu/torch_stable.html
-torch>=2.9.0,<2.10
-torchvision>=0.15.1,<0.16
-streamlit==1.26.0
-transformers
-Pillow
-requests
-rich>=10.14.0,<14
-markdown-it-py==4.0.0
-mdurl==0.1.2
-pygments==2.19.2
+# These versions are upgraded to fix the ABI error with Python 3.13.9
+# Note: The minimum version may differ depending on the exact requirements of your project
+torch>=2.10.0
+torchvision>=0.16.0
+
+# Other packages commonly found in computer vision/video processing projects
+numpy>=1.24.0
+opencv-python>=4.7.0.72
+Pillow>=9.5.0
+
+# Packages for user interface and data processing
+streamlit>=1.20.0
+pandas>=2.0.0
+moviepy>=1.0.3
+
+# Other packages found in your error logs
+rich>=10.14.0
+markdown-it-py>=2.2.0
+pygments<3.0.0,>=2.13.0
+mdurl~=0.1
