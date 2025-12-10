@@ -1,3 +1,0 @@
-python3-pip
-libopenblas-dev
-libomp-dev
