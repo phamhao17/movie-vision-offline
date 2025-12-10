@@ -1,6 +1,12 @@
+# Streamlit
 streamlit==1.26.0
-torch==2.9.1+cpu
-torchvision==0.17.1+cpu
+
+# PyTorch CPU versions (HF Spaces sẽ dùng CPU nếu không có GPU)
+-f https://download.pytorch.org/whl/cpu/torch_stable.html
+torch==2.9.1
+torchvision==0.17.1
+
+# Transformers, Pillow, requests
 transformers==4.34.0
 Pillow==10.0.0
 requests==2.31.0
