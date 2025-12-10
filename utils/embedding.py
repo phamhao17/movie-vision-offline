@@ -2,14 +2,11 @@ import pandas as pd
 import pickle
 import torch
 from transformers import CLIPModel, CLIPTokenizer
-import os
-
 
 def load_clip():
     model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
     tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
     return model, tokenizer
-
 
 def generate_embeddings(movie_csv_path="data/movies.csv",
                         output_path="data/embeddings.pkl"):
@@ -26,4 +23,9 @@ def generate_embeddings(movie_csv_path="data/movies.csv",
     with open(output_path, "wb") as f:
         pickle.dump({"embeddings": embeddings, "df": df}, f)
 
-    print("Saved embeddings!")
+    print("Saved embeddings! Number of embeddings:", embeddings.shape)
+
+# Gọi hàm khi chạy script trực tiếp
+if __name__ == "__main__":
+    generate_embeddings(movie_csv_path="data/movies.csv",
+                        output_path="data/embeddings.pkl")
