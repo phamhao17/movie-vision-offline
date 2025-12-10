@@ -1,3 +1,8 @@
+# --- FIX FOR HUGGINGFACE SPACES ---
+import os
+os.system("pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu")
+
+# --- Your app starts here ---
 import streamlit as st
 import json
 import torch
@@ -31,7 +36,7 @@ embeddings = torch.tensor([m["embedding"] for m in movies_data])
 # ----------------------
 # CLIP Model
 # ----------------------
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cpu"   # <--- HuggingFace Spaces dùng CPU
 model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
 processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
@@ -47,7 +52,6 @@ music_map = {
     "aliens": ("Ambient", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"),
     "blindfold": ("Chillout", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"),
     "class divide": ("Classical", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3")
-    # Thêm các thể loại khác nếu muốn
 }
 
 # ----------------------
@@ -62,14 +66,12 @@ if mode == "Upload Image to find movies":
         image = Image.open(uploaded_file).convert("RGB")
         st.image(image, caption="Uploaded Image", use_column_width=True)
 
-        # CLIP image embedding
         inputs = processor(images=image, return_tensors="pt").to(device)
         with torch.no_grad():
             image_emb = model.get_image_features(**inputs)
 
-        # Cosine similarity
         image_emb_norm = F.normalize(image_emb, dim=-1)
-        movie_embs_norm = F.normalize(embeddings, dim=-1).to(device)
+        movie_embs_norm = F.normalize(embeddings, dim=-1)
         similarities = (image_emb_norm @ movie_embs_norm.T).squeeze(0)
         top5_idx = similarities.topk(min(5, len(titles))).indices.cpu().numpy()
 
@@ -80,12 +82,13 @@ if mode == "Upload Image to find movies":
             st.write(f"**Summary:** {summaries[idx]}")
             if poster_urls[idx]:
                 st.image(poster_urls[idx], width=200)
-            # Music suggestion
+
             movie_tags = tags[idx].lower().split("|")
             suggested_genres = set()
             for t in movie_tags:
                 if t.strip() in music_map:
                     suggested_genres.add(t.strip())
+
             if suggested_genres:
                 st.write("🎵 Suggested music:")
                 for g in suggested_genres:
@@ -102,7 +105,6 @@ elif mode == "Text Description to find images":
     desc = st.text_area("Enter your image description:")
     if st.button("Generate placeholder images"):
         st.write("Note: This demo does not generate real images, just shows placeholders.")
-        # Fake placeholder images (since no real API)
         for i in range(3):
             placeholder_url = f"https://via.placeholder.com/200x200.png?text=Image+{i+1}"
             st.image(placeholder_url, caption=f"Generated Image {i+1}")
