@@ -1,6 +1,18 @@
+# Tell pip where to find the CPU wheels for PyTorch
+-f https://download.pytorch.org/whl/cpu/torch_stable.html
+
+# Streamlit for UI
 streamlit==1.26.0
+
+# PyTorch and torchvision CPU versions compatible with Python 3.13+
 torch==2.9.1+cpu
 torchvision==0.17.1+cpu
+
+# Hugging Face Transformers
 transformers==4.39.2
+
+# Image processing
 Pillow==10.0.0
+
+# HTTP requests
 requests==2.31.0
