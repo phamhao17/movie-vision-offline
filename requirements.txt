@@ -1,10 +1,17 @@
+# Chỉ định link PyTorch CPU wheels
 --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
-torch==2.9.0
-torchvision==0.17.0
+
+# PyTorch + torchvision tương thích Python 3.12 CPU
+torch==2.13.1+cpu
+torchvision==0.17.1+cpu
+
+# Streamlit và các package khác
 streamlit==1.26.0
 transformers
 Pillow
 requests
+
+# Rich và các dependency liên quan, tránh conflict với Streamlit
 rich>=10.14.0,<14
 markdown-it-py==4.0.0
 mdurl==0.1.2
