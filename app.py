@@ -1,60 +1,112 @@
 import streamlit as st
 import json
 import torch
+import torch.nn.functional as F
 from transformers import CLIPModel, CLIPProcessor
 from PIL import Image
 import requests
+from io import BytesIO
 
-# Set the device for model computation (Using CPU as requested for general/free deployment)
-device = "cpu"
+# ----------------------
+# Cấu hình
+# ----------------------
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# --- Data Loading ---
+# ----------------------
+# Load movies.json
+# ----------------------
+with open("data/movies.json", "r") as f:
+    movies_data = json.load(f)
 
-# Load movies.json (Ensure this file is in the 'data' directory on GitHub)
-try:
-    with open("data/movies.json", "r") as f:
-        movies_data = json.load(f)
-except FileNotFoundError:
-    st.error("Error: 'data/movies.json' not found. Please ensure the file is committed and pushed to GitHub.")
-    st.stop()
-
-# Fix and normalize embeddings (ensure all embeddings are 512 dimensions)
+# Fix embeddings to exactly 512 dims
 for m in movies_data:
     emb = m["embedding"]
     if len(emb) < 512:
-        # Pad with zeros if shorter
-        emb += [0.0] * (512 - len(emb))
+        emb = emb + [0.0]*(512 - len(emb))
     elif len(emb) > 512:
-        # Truncate if longer
         emb = emb[:512]
     m["embedding"] = emb
 
-# Convert all embeddings into a PyTorch Tensor
+titles = [m["title"] for m in movies_data]
+tags = [m["tags"] for m in movies_data]
+summaries = [m["summary"] for m in movies_data]
+poster_urls = [m["poster_url"] for m in movies_data]
 embeddings = torch.tensor([m["embedding"] for m in movies_data])
 
-# --- Model Loading ---
+# ----------------------
+# CLIP Model
+# ----------------------
+model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
+processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
-@st.cache_resource
-def load_clip_model():
-    """Loads the CLIP model and processor, and caches them."""
-    try:
-        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
-        processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-        return model, processor
-    except Exception as e:
-        st.error(f"Error loading CLIP model. Check if 'transformers' and 'accelerate' are installed. Details: {e}")
-        st.stop()
+# ----------------------
+# Music suggestion
+# ----------------------
+music_map = {
+    "korean": ("K-Pop", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"),
+    "twist": ("Jazz", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"),
+    "fbi": ("Electronic", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"),
+    "con man": ("Hip-hop", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"),
+    "time loop": ("Synthwave", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"),
+    "aliens": ("Ambient", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"),
+    "blindfold": ("Chillout", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"),
+    "class divide": ("Classical", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3")
+    # Thêm các thể loại khác nếu muốn
+}
 
-model, processor = load_clip_model()
+# ----------------------
+# Streamlit UI
+# ----------------------
+st.title("🎬 Movie Vision - Image & Music Recommendation")
+mode = st.radio("Choose mode:", ["Upload Image to find movies", "Text Description to find images"])
 
-# --- Streamlit Application Logic ---
+if mode == "Upload Image to find movies":
+    uploaded_file = st.file_uploader("Upload a movie image", type=["jpg","jpeg","png"])
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file).convert("RGB")
+        st.image(image, caption="Uploaded Image", use_column_width=True)
 
-st.title("🎬 Movie Recommendation App based on Text")
-st.write("Enter a description of the movie you are looking for.")
+        # CLIP image embedding
+        inputs = processor(images=image, return_tensors="pt").to(device)
+        with torch.no_grad():
+            image_emb = model.get_image_features(**inputs)
 
-# 1. Get query from the user
-text_query = st.text_input("Your Movie Description:", "A thrilling action movie about fighting robots in the future")
+        # Cosine similarity
+        image_emb_norm = F.normalize(image_emb, dim=-1)
+        movie_embs_norm = F.normalize(embeddings, dim=-1).to(device)
+        similarities = (image_emb_norm @ movie_embs_norm.T).squeeze(0)
+        top5_idx = similarities.topk(min(5, len(titles))).indices.cpu().numpy()
 
-if text_query:
-    # 2. Process the query
-    with st
+        st.write("### Top 5 similar movies:")
+        for idx in top5_idx:
+            st.write(f"### {titles[idx]}")
+            st.write(f"**Tags:** {tags[idx]}")
+            st.write(f"**Summary:** {summaries[idx]}")
+            if poster_urls[idx]:
+                st.image(poster_urls[idx], width=200)
+            # Music suggestion
+            movie_tags = tags[idx].lower().split("|")
+            suggested_genres = set()
+            for t in movie_tags:
+                if t.strip() in music_map:
+                    suggested_genres.add(t.strip())
+            if suggested_genres:
+                st.write("🎵 Suggested music:")
+                for g in suggested_genres:
+                    genre_name, music_url = music_map[g]
+                    st.write(f"- {genre_name}")
+                    try:
+                        audio_bytes = requests.get(music_url).content
+                        st.audio(audio_bytes, format="audio/mp3")
+                    except:
+                        st.write("Audio not available.")
+            st.write("---")
+
+elif mode == "Text Description to find images":
+    desc = st.text_area("Enter your image description:")
+    if st.button("Generate placeholder images"):
+        st.write("Note: This demo does not generate real images, just shows placeholders.")
+        # Fake placeholder images (since no real API)
+        for i in range(3):
+            placeholder_url = f"https://via.placeholder.com/200x200.png?text=Image+{i+1}"
+            st.image(placeholder_url, caption=f"Generated Image {i+1}")
