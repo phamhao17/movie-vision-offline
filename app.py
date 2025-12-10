@@ -1,33 +1,4 @@
-# app.py
-
 import streamlit as st
-import json
-# ... other libraries
-import pathlib # <- IMPORTANT: Must be imported
-
-# ... (Initial configurations)
-
-# ----------------------
-# NEW FIXED CODE LOCATION
-# ----------------------
-try:
-    # 1. Define the absolute path
-    script_dir = pathlib.Path(__file__).parent 
-    json_path = script_dir / "data" / "movies.json" 
-
-    # DEBUGGING LINE (Optional, but helpful for troubleshooting)
-    st.code(f"ABSOLUTE PATH BEING SEARCHED: {json_path}")
-    
-    # 2. Open the file using the absolute path
-    with open(json_path, "r") as f: 
-        movies_data = json.load(f)
-        
-    st.success(f"Successfully loaded movie data from: {json_path}")
-    
-except Exception as e:
-    st.error(f"FILE NOT FOUND ERROR. Details: {e}")
-    st.stop() 
-# ----------------------import streamlit as st
 import json
 import torch
 import torch.nn.functional as F
@@ -43,13 +14,16 @@ import pathlib # Required for robust path handling
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # ----------------------
-# ERROR FIX: Load movies.json (Using pathlib)
+# LOAD CORE DATA (FIXED USING PATHLIB)
 # ----------------------
 try:
     # 1. Define the absolute path based on the script's location
     script_dir = pathlib.Path(__file__).parent 
     json_path = script_dir / "data" / "movies.json" # Constructs the full path
 
+    # VUI LÒNG XEM DÒNG NÀY TRÊN APP ĐỂ XÁC NHẬN ĐƯỜNG DẪN TUYỆT ĐỐI!
+    # st.code(f"ABSOLUTE PATH BEING SEARCHED: {json_path}")
+    
     # 2. Open the file using the absolute path
     with open(json_path, "r") as f: 
         movies_data = json.load(f)
@@ -57,7 +31,7 @@ try:
     st.success(f"Successfully loaded movie data from: {json_path}")
     
 except Exception as e:
-    # Display the error and stop the app if core data cannot be loaded
+    # Stop the app if core data cannot be loaded
     st.error(f"FILE NOT FOUND ERROR: Please ensure movies.json is inside the 'data' directory. Details: {e}")
     st.stop() 
 
@@ -97,7 +71,6 @@ music_map = {
     "aliens": ("Ambient", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"),
     "blindfold": ("Chillout", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"),
     "class divide": ("Classical", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3")
-    # Add other genres if desired
 }
 
 # ----------------------
