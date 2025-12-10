@@ -1,16 +1,7 @@
-# Streamlit cho UI
 streamlit
-
-# Transformers để dùng CLIP
 transformers==4.41.0
-
-# Xử lý hình ảnh
 Pillow
-
-# Gọi API, download nhạc
 requests
-
-# PyTorch CPU-only, phiên bản ổn định cho HF Spaces
 torch==2.2.0+cpu
 torchvision==0.17.0+cpu
 --extra-index-url https://download.pytorch.org/whl/cpu
