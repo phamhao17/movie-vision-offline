@@ -1,4 +1,3 @@
-
 import streamlit as st
 import json
 import torch
@@ -7,18 +6,35 @@ from transformers import CLIPModel, CLIPProcessor
 from PIL import Image
 import requests
 from io import BytesIO
+import pathlib # Required for robust path handling
 
 # ----------------------
-# Cấu hình
+# Configuration
 # ----------------------
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # ----------------------
-# Load movies.json
+# LOAD CORE DATA (FIXED USING PATHLIB)
 # ----------------------
-with open("data/movies.json", "r") as f:
-    movies_data = json.load(f)
+try:
+    # 1. Define the absolute path based on the script's location
+    script_dir = pathlib.Path(__file__).parent 
+    json_path = script_dir / "data" / "movies.json" # Constructs the full path
 
+    # 2. Open the file using the absolute path
+    with open(json_path, "r") as f: 
+        movies_data = json.load(f)
+        
+    st.success(f"Successfully loaded movie data from: {json_path}")
+    
+except Exception as e:
+    # Stop the app if core data cannot be loaded
+    st.error(f"FILE NOT FOUND ERROR: Please ensure movies.json is inside the 'data' directory. Details: {e}")
+    st.stop() 
+
+# ----------------------
+# Data Preprocessing
+# ----------------------
 # Fix embeddings to exactly 512 dims
 for m in movies_data:
     emb = m["embedding"]
@@ -52,7 +68,6 @@ music_map = {
     "aliens": ("Ambient", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"),
     "blindfold": ("Chillout", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"),
     "class divide": ("Classical", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3")
-    # Thêm các thể loại khác nếu muốn
 }
 
 # ----------------------
@@ -85,29 +100,7 @@ if mode == "Upload Image to find movies":
             st.write(f"**Summary:** {summaries[idx]}")
             if poster_urls[idx]:
                 st.image(poster_urls[idx], width=200)
+            
             # Music suggestion
             movie_tags = tags[idx].lower().split("|")
-            suggested_genres = set()
-            for t in movie_tags:
-                if t.strip() in music_map:
-                    suggested_genres.add(t.strip())
-            if suggested_genres:
-                st.write("🎵 Suggested music:")
-                for g in suggested_genres:
-                    genre_name, music_url = music_map[g]
-                    st.write(f"- {genre_name}")
-                    try:
-                        audio_bytes = requests.get(music_url).content
-                        st.audio(audio_bytes, format="audio/mp3")
-                    except:
-                        st.write("Audio not available.")
-            st.write("---")
-
-elif mode == "Text Description to find images":
-    desc = st.text_area("Enter your image description:")
-    if st.button("Generate placeholder images"):
-        st.write("Note: This demo does not generate real images, just shows placeholders.")
-        # Fake placeholder images (since no real API)
-        for i in range(3):
-            placeholder_url = f"https://via.placeholder.com/200x200.png?text=Image+{i+1}"
-            st.image(placeholder_url, caption=f"Generated Image {i+1}")
+            suggested_
