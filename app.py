@@ -1,4 +1,31 @@
+# app.py
 import streamlit as st
+import pathlib # <- Line 1: Add the pathlib library import
+
+# (Other Streamlit configuration or setup commands...)
+
+# --- FILE ERROR FIX SECTION ---
+# Line 2: Get the absolute directory path where the current script (app.py) is located
+script_dir = pathlib.Path(__file__).parent 
+
+# Line 3: Construct the full, absolute path to the JSON file
+json_path = script_dir / "data" / "movies.json"
+# ------------------------------
+
+# Line 4 (The previous Line 18 in your Traceback): Use the new path variable
+try:
+    with open(json_path, "r") as f: # <- Use the 'json_path' variable instead of "data/movies.json"
+        # ... your code to load JSON ...
+        movies = json.load(f) # Assuming you are using the 'json' library
+    
+    st.success(f"Successfully loaded data from: {json_path}")
+    
+except Exception as e:
+    st.error(f"An error occurred while loading the JSON file: {e}")
+    # Handle the error or display a friendly message
+
+# (The rest of your Streamlit code)
+# ...import streamlit as st
 import json
 import torch
 import torch.nn.functional as F
