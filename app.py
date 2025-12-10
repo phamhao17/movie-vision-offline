@@ -5,7 +5,6 @@ import torch.nn.functional as F
 from transformers import CLIPModel, CLIPProcessor
 from PIL import Image
 import requests
-from io import BytesIO
 
 # ----------------------
 # Load movies.json
@@ -17,7 +16,7 @@ with open("data/movies.json", "r") as f:
 for m in movies_data:
     emb = m["embedding"]
     if len(emb) < 512:
-        emb = emb + [0.0]*(512 - len(emb))
+        emb += [0.0] * (512 - len(emb))
     elif len(emb) > 512:
         emb = emb[:512]
     m["embedding"] = emb
@@ -31,12 +30,12 @@ embeddings = torch.tensor([m["embedding"] for m in movies_data])
 # ----------------------
 # CLIP Model
 # ----------------------
-device = "cpu"   # HF Spaces dùng CPU
+device = "cpu"  # HF Spaces miễn phí chỉ dùng CPU
 model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
 processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
 # ----------------------
-# Music suggestion
+# Music suggestion map
 # ----------------------
 music_map = {
     "korean": ("K-Pop", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"),
@@ -46,60 +45,4 @@ music_map = {
     "time loop": ("Synthwave", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"),
     "aliens": ("Ambient", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"),
     "blindfold": ("Chillout", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"),
-    "class divide": ("Classical", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3")
-}
-
-# ----------------------
-# Streamlit UI
-# ----------------------
-st.title("🎬 Movie Vision - Image & Music Recommendation")
-mode = st.radio("Choose mode:", ["Upload Image to find movies", "Text Description to find images"])
-
-if mode == "Upload Image to find movies":
-    uploaded_file = st.file_uploader("Upload a movie image", type=["jpg","jpeg","png"])
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file).convert("RGB")
-        st.image(image, caption="Uploaded Image", use_column_width=True)
-
-        inputs = processor(images=image, return_tensors="pt").to(device)
-        with torch.no_grad():
-            image_emb = model.get_image_features(**inputs)
-
-        image_emb_norm = F.normalize(image_emb, dim=-1)
-        movie_embs_norm = F.normalize(embeddings, dim=-1)
-        similarities = (image_emb_norm @ movie_embs_norm.T).squeeze(0)
-        top5_idx = similarities.topk(min(5, len(titles))).indices.cpu().numpy()
-
-        st.write("### Top 5 similar movies:")
-        for idx in top5_idx:
-            st.write(f"### {titles[idx]}")
-            st.write(f"**Tags:** {tags[idx]}")
-            st.write(f"**Summary:** {summaries[idx]}")
-            if poster_urls[idx]:
-                st.image(poster_urls[idx], width=200)
-
-            movie_tags = tags[idx].lower().split("|")
-            suggested_genres = set()
-            for t in movie_tags:
-                if t.strip() in music_map:
-                    suggested_genres.add(t.strip())
-
-            if suggested_genres:
-                st.write("🎵 Suggested music:")
-                for g in suggested_genres:
-                    genre_name, music_url = music_map[g]
-                    st.write(f"- {genre_name}")
-                    try:
-                        audio_bytes = requests.get(music_url).content
-                        st.audio(audio_bytes, format="audio/mp3")
-                    except:
-                        st.write("Audio not available.")
-            st.write("---")
-
-elif mode == "Text Description to find images":
-    desc = st.text_area("Enter your image description:")
-    if st.button("Generate placeholder images"):
-        st.write("Note: This demo does not generate real images, just shows placeholders.")
-        for i in range(3):
-            placeholder_url = f"https://via.placeholder.com/200x200.png?text=Image+{i+1}"
-            st.image(placeholder_url, caption=f"Generated Image {i+1}")
+    "class divide": ("Classical", "https://www.soundhelix.com/examples/mp3/Sou
