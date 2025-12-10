@@ -1,7 +1,16 @@
+# Streamlit for UI
 streamlit
-transformers
+
+# Transformers to use CLIP
+transformers==4.41.0
+
+# Image processing
 Pillow
+
+# API calls and music download
 requests
+
+# PyTorch CPU-only, stable version for HF Spaces
 torch==2.2.0+cpu
 torchvision==0.17.0+cpu
 --extra-index-url https://download.pytorch.org/whl/cpu
