@@ -1,8 +1,3 @@
-# --- FIX FOR HUGGINGFACE SPACES ---
-import os
-os.system("pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu")
-
-# --- Your app starts here ---
 import streamlit as st
 import json
 import torch
@@ -36,7 +31,7 @@ embeddings = torch.tensor([m["embedding"] for m in movies_data])
 # ----------------------
 # CLIP Model
 # ----------------------
-device = "cpu"   # <--- HuggingFace Spaces dùng CPU
+device = "cpu"   # HF Spaces dùng CPU
 model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
 processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
