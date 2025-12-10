@@ -1,6 +1,12 @@
+# Dùng index-url chính thức của PyTorch CPU
+--index-url https://download.pytorch.org/whl/cpu
+
+# Torch CPU version
+torch==2.2.0+cpu
+torchvision==0.17.1+cpu
+
+# Các thư viện khác cần thiết
 streamlit
-torch==2.2.0+cpu --index-url https://download.pytorch.org/whl/cpu
-torchvision==0.17.1+cpu --index-url https://download.pytorch.org/whl/cpu
 transformers
 Pillow
 requests
