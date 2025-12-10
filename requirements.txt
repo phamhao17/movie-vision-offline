@@ -1,6 +1,6 @@
 streamlit==1.26.0
 torch==2.9.1+cpu
-torchvision==0.15.2+cpu
+torchvision==0.17.1+cpu
 transformers==4.34.0
 Pillow==10.0.0
 requests==2.31.0
