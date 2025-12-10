@@ -1,4 +1,33 @@
+# app.py
+
 import streamlit as st
+import json
+# ... other libraries
+import pathlib # <- IMPORTANT: Must be imported
+
+# ... (Initial configurations)
+
+# ----------------------
+# NEW FIXED CODE LOCATION
+# ----------------------
+try:
+    # 1. Define the absolute path
+    script_dir = pathlib.Path(__file__).parent 
+    json_path = script_dir / "data" / "movies.json" 
+
+    # DEBUGGING LINE (Optional, but helpful for troubleshooting)
+    st.code(f"ABSOLUTE PATH BEING SEARCHED: {json_path}")
+    
+    # 2. Open the file using the absolute path
+    with open(json_path, "r") as f: 
+        movies_data = json.load(f)
+        
+    st.success(f"Successfully loaded movie data from: {json_path}")
+    
+except Exception as e:
+    st.error(f"FILE NOT FOUND ERROR. Details: {e}")
+    st.stop() 
+# ----------------------import streamlit as st
 import json
 import torch
 import torch.nn.functional as F
